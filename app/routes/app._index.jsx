@@ -90,28 +90,26 @@ export const action = async ({ request }) => {
 };
 
 export default function Index() {
-  const fetcher = useFetcher();
   const shopify = useAppBridge();
-  const isLoading =
-    ["loading", "submitting"].includes(fetcher.state) &&
-    fetcher.formMethod === "POST";
-  const productId = fetcher.data?.product?.id.replace(
-    "gid://shopify/Product/",
-    "",
-  );
+  // const isLoading =
+  //   ["loading", "submitting"].includes(fetcher.state) &&
+  //   fetcher.formMethod === "POST";
+  // const productId = fetcher.data?.product?.id.replace(
+  //   "gid://shopify/Product/",
+  //   "",
+  // );
 
-  useEffect(() => {
-    if (productId) {
-      shopify.toast.show("Product created");
-    }
-  }, [productId, shopify]);
-  const generateProduct = () => fetcher.submit({}, { method: "POST" });
+  // useEffect(() => {
+  //   if (productId) {
+  //     shopify.toast.show("Product created");
+  //   }
+  // }, [productId, shopify]);
 
   return (
     <Page>
-      <TitleBar title="Remix app template">
-        <button variant="primary" onClick={generateProduct}>
-          Generate a product
+      <TitleBar title="Overview">
+        <button variant="primary" onClick={''}>
+          Create cart notice
         </button>
       </TitleBar>
       <BlockStack gap="500">
@@ -166,10 +164,10 @@ export default function Index() {
                   </Text>
                 </BlockStack>
                 <InlineStack gap="300">
-                  <Button loading={isLoading} onClick={generateProduct}>
+                  {/* <Button loading={isLoading} onClick={generateProduct}>
                     Generate a product
-                  </Button>
-                  {fetcher.data?.product && (
+                  </Button> */}
+                  {/* {fetcher.data?.product && (
                     <Button
                       url={`shopify:admin/products/${productId}`}
                       target="_blank"
@@ -177,9 +175,9 @@ export default function Index() {
                     >
                       View product
                     </Button>
-                  )}
+                  )} */}
                 </InlineStack>
-                {fetcher.data?.product && (
+                {/* {fetcher.data?.product && (
                   <>
                     <Text as="h3" variant="headingMd">
                       {" "}
@@ -218,7 +216,7 @@ export default function Index() {
                       </pre>
                     </Box>
                   </>
-                )}
+                )} */}
               </BlockStack>
             </Card>
           </Layout.Section>

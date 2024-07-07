@@ -1,0 +1,5 @@
+-- CreateTable
+CREATE TABLE "Amount" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "value" REAL NOT NULL
+);
