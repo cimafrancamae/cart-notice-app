@@ -23,21 +23,38 @@ import {useState, useCallback} from 'react';
 import { json } from "@remix-run/node";
 import { Form, useLoaderData } from "@remix-run/react";
 
-export async function loader() {
-  let settings = {
-    textSize: 'small',
-    textColor: '#0000',
-    backgroundColor: '#fff',
-    borderColor: '#000',
-    borderRadiusRangeValue: 10,
-  }
+import db from "../db.server";
 
-  return json(settings);
+export async function loader() {
+  let setting = await db.setting.findFirst();
+  return json(setting);
 }
 
 export async function action({ request }) {
   let settings = await request.formData();
   settings = Object.fromEntries(settings);
+
+  await db.setting.upsert({
+    where: {
+      id: '1',
+    },
+    update: {
+      id: '1',
+      textSize: settings.textSize,
+      textColor: settings.textColor,
+      backgroundColor: settings.backgroundColor,
+      borderColor: settings.borderColor,
+      borderRadius: parseInt(settings.borderRadius),
+    },
+    create: {
+      id: '1',
+      textSize: settings.textSize,
+      textColor: settings.textColor,
+      backgroundColor: settings.backgroundColor,
+      borderColor: settings.borderColor,
+      borderRadius: parseInt(settings.borderRadius),
+    },
+  });
 
   return json(settings)
 }
@@ -134,10 +151,10 @@ export default function SettingsPage() {
                   name="textSize"
                   options={options}
                   onChange={(value) => setFormState({ ...formState, textSize: value })}
-                  value={formState.textSize}
+                  value={formState?.textSize}
                 />
 
-                <TextField label="Text Color" name="textColor" value={formState.textColor} readOnly />
+                <TextField label="Text Color" name="textColor" value={formState?.textColor} readOnly />
                 <Button onClick={toggleTextColorPicker}>
                   {isTextColorPickerOpen ? 'Close' : 'Choose'}
                 </Button>
@@ -147,7 +164,7 @@ export default function SettingsPage() {
                   </div>
                 )}
 
-                <TextField label="Background Color" name="backgroundColor" value={formState.backgroundColor} readOnly />
+                <TextField label="Background Color" name="backgroundColor" value={formState?.backgroundColor} readOnly />
                 <Button onClick={toggleBackgroundColorPicker}>
                   {isBackgroundColorPickerOpen ? 'Close' : 'Choose'}
                 </Button>
@@ -157,7 +174,7 @@ export default function SettingsPage() {
                   </div>
                 )}
 
-                <TextField label="Border Color" name="borderColor" value={formState.borderColor} readOnly />
+                <TextField label="Border Color" name="borderColor" value={formState?.borderColor} readOnly />
                 <Button onClick={toggleBorderColorPicker}>
                   {isBorderColorPickerOpen ? 'Close' : 'Choose'}
                 </Button>
@@ -167,11 +184,11 @@ export default function SettingsPage() {
                   </div>
                 )}
 
-                <TextField label="Border Radius" name="borderRadiusRangeValue" value={formState.borderRadiusRangeValue} readOnly />
+                <TextField label="Border Radius" name="borderRadius" value={formState?.borderRadius} readOnly />
                 <RangeSlider
-                  value={formState.borderRadiusRangeValue}
-                  onChange={(value) => setFormState({ ...formState, borderRadiusRangeValue: value })}
-                  // output
+                  value={formState?.borderRadius}
+                  onChange={(value) => setFormState({ ...formState, borderRadius: value })}
+                  output
                 />
               </BlockStack>
             </Card>

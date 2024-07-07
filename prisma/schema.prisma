@@ -36,3 +36,11 @@ model Amount {
   value Float
 }
 
+model Setting {
+  id                String  @id
+  textSize          String
+  textColor         String
+  backgroundColor   String
+  borderColor       String
+  borderRadius      Int
+}

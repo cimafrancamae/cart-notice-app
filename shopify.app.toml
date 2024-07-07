@@ -3,7 +3,7 @@
 client_id = "e83d1f588066e0f26050d71b2c2e94b8"
 name = "cart-notice-app"
 handle = "cart-notice-app"
-application_url = "https://sample-everywhere-kruger-bw.trycloudflare.com"
+application_url = "https://char-abstracts-bacterial-adapted.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_all_orders"
 
 [auth]
 redirect_urls = [
-  "https://sample-everywhere-kruger-bw.trycloudflare.com/auth/callback",
-  "https://sample-everywhere-kruger-bw.trycloudflare.com/auth/shopify/callback",
-  "https://sample-everywhere-kruger-bw.trycloudflare.com/api/auth/callback"
+  "https://char-abstracts-bacterial-adapted.trycloudflare.com/auth/callback",
+  "https://char-abstracts-bacterial-adapted.trycloudflare.com/auth/shopify/callback",
+  "https://char-abstracts-bacterial-adapted.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
