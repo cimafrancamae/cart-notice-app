@@ -1,23 +1,25 @@
-{% assign cart_total = cart.total_price %}
-{% assign free_shipping_threshold = block.settings.free_shipping_threshold %}
-{% assign amount_needed = free_shipping_threshold | minus: cart_total %}
+{%- if cart != empty -%}
+  {% assign cart_total = cart.total_price %}
+  {% assign free_shipping_threshold = block.settings.free_shipping_threshold %}
+  {% assign amount_needed = free_shipping_threshold | minus: cart_total %}
 
-<div style="
-  font-size: {{ block.settings.textSize }};
-  color: {{ block.settings.textColor }};
-  background-color: {{ block.settings.backgroundColor }};
-  border: 1px solid {{ block.settings.borderColor }};
-  border-radius: {{ block.settings.borderRadius }}px;
-  padding: 10px;
-  margin-top: 10px;
-  text-align: center;
-">
-  {% if amount_needed > 0 %}
-    You are {{ amount_needed | money }} away from free shipping.
-  {% else %}
-    Congratulations! You qualify for free shipping.
-  {% endif %}
-</div>
+  <div style="
+    font-size: {{ block.settings.textSize }};
+    color: {{ block.settings.textColor }};
+    background-color: {{ block.settings.backgroundColor }};
+    border: 1px solid {{ block.settings.borderColor }};
+    border-radius: {{ block.settings.borderRadius }}px;
+    padding: 10px;
+    margin-top: 10px;
+    text-align: center;
+  ">
+    {% if amount_needed > 0 %}
+      You are {{ amount_needed | money }} away from FREE shipping.
+    {% else %}
+      Congratulations! You qualify for FREE shipping.
+    {% endif %}
+  </div>
+{%- endif -%}
 
 {% schema %}
 {
@@ -58,7 +60,7 @@
       "id": "free_shipping_threshold",
       "type": "number",
       "label": "Free Shipping Threshold",
-      "default": 40000
+      "default": 400
     }
   ]
 }
