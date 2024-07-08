@@ -3,7 +3,7 @@
 client_id = "e83d1f588066e0f26050d71b2c2e94b8"
 name = "cart-notice-app"
 handle = "cart-notice-app"
-application_url = "https://reproductive-texture-still-el.trycloudflare.com"
+application_url = "https://trace-counts-download-studying.trycloudflare.com"
 embedded = true
 
 [build]
@@ -13,13 +13,13 @@ include_config_on_deploy = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_all_orders"
+scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://reproductive-texture-still-el.trycloudflare.com/auth/callback",
-  "https://reproductive-texture-still-el.trycloudflare.com/auth/shopify/callback",
-  "https://reproductive-texture-still-el.trycloudflare.com/api/auth/callback"
+  "https://trace-counts-download-studying.trycloudflare.com/auth/callback",
+  "https://trace-counts-download-studying.trycloudflare.com/auth/shopify/callback",
+  "https://trace-counts-download-studying.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

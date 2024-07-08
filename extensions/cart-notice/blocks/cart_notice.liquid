@@ -1,0 +1,65 @@
+{% assign cart_total = cart.total_price %}
+{% assign free_shipping_threshold = block.settings.free_shipping_threshold %}
+{% assign amount_needed = free_shipping_threshold | minus: cart_total %}
+
+<div style="
+  font-size: {{ block.settings.textSize }};
+  color: {{ block.settings.textColor }};
+  background-color: {{ block.settings.backgroundColor }};
+  border: 1px solid {{ block.settings.borderColor }};
+  border-radius: {{ block.settings.borderRadius }}px;
+  padding: 10px;
+  margin-top: 10px;
+  text-align: center;
+">
+  {% if amount_needed > 0 %}
+    You are {{ amount_needed | money }} away from free shipping.
+  {% else %}
+    Congratulations! You qualify for free shipping.
+  {% endif %}
+</div>
+
+{% schema %}
+{
+  "name": "Cart Notice",
+  "target": "section",
+  "settings": [
+    {
+      "id": "textSize",
+      "type": "text",
+      "label": "Text Size",
+      "default": "16px"
+    },
+    {
+      "id": "textColor",
+      "type": "color",
+      "label": "Text Color",
+      "default": "#000000"
+    },
+    {
+      "id": "backgroundColor",
+      "type": "color",
+      "label": "Background Color",
+      "default": "#fafafa"
+    },
+    {
+      "id": "borderColor",
+      "type": "color",
+      "label": "Border Color",
+      "default": "#a1a1a1"
+    },
+    {
+      "id": "borderRadius",
+      "type": "number",
+      "label": "Border Radius",
+      "default": 10
+    },
+    {
+      "id": "free_shipping_threshold",
+      "type": "number",
+      "label": "Free Shipping Threshold",
+      "default": 40000
+    }
+  ]
+}
+{% endschema %}
