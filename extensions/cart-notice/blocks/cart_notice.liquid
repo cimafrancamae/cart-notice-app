@@ -1,25 +1,66 @@
-{%- if cart != empty -%}
-  {% assign cart_total = cart.total_price %}
-  {% assign free_shipping_threshold = block.settings.free_shipping_threshold %}
-  {% assign amount_needed = free_shipping_threshold | minus: cart_total %}
 
-  <div style="
-    font-size: {{ block.settings.textSize }};
-    color: {{ block.settings.textColor }};
-    background-color: {{ block.settings.backgroundColor }};
-    border: 1px solid {{ block.settings.borderColor }};
-    border-radius: {{ block.settings.borderRadius }}px;
-    padding: 10px;
-    margin-top: 10px;
-    text-align: center;
-  ">
-    {% if amount_needed > 0 %}
-      You are {{ amount_needed | money }} away from FREE shipping.
-    {% else %}
-      Congratulations! You qualify for FREE shipping.
-    {% endif %}
-  </div>
-{%- endif -%}
+  {%- if cart != empty -%}
+    {% assign currency_symbol = shop.money_format | remove: "{{amount}}" | strip %}
+
+    <div 
+      x-data="cartNotice" 
+      x-init="init"
+      x-show="cartTotal > 0"
+      data-free-shipping-threshold="{{ block.settings.free_shipping_threshold }}"
+      data-cart-total="{{ cart.total_price | divided_by: 100 }}"
+      data-currency-symbol="{{ currency_symbol }}"
+      style="
+        font-size: {{ block.settings.textSize }};
+        color: {{ block.settings.textColor }};
+        background-color: {{ block.settings.backgroundColor }};
+        border: 1px solid {{ block.settings.borderColor }};
+        border-radius: {{ block.settings.borderRadius }}px;
+        text-align: {{ block.settings.textAlign }};
+        padding: 10px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    ">
+      <div>
+        <template x-if="amountNeeded > 0">
+          <p>You are <span x-text="currencySymbol"></span><span x-text="amountNeeded.toFixed(2)"></span> away from FREE shipping.</p>
+        </template>
+        <template x-if="amountNeeded <= 0">
+          <p>Congratulations! You qualify for FREE shipping.</p>
+        </template>
+      </div>
+    </div>
+  {%- endif -%}
+
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script src="{{ 'cart_events.js' | asset_url }}"></script>
+
+<script>
+  function cartNotice() {
+    return {
+      freeShippingThreshold: 0,
+      cartTotal: 0,
+      amountNeeded: 0,
+      currencySymbol: '',
+      init() {
+        this.freeShippingThreshold = parseFloat(this.$el.dataset.freeShippingThreshold);
+        this.cartTotal = parseFloat(this.$el.dataset.cartTotal);
+        this.currencySymbol = this.$el.dataset.currencySymbol;
+        this.updateAmountNeeded();
+        this.setupCartListener();
+      },
+      updateAmountNeeded() {
+        this.amountNeeded = this.freeShippingThreshold - this.cartTotal;
+      },
+      setupCartListener() {
+        window.addEventListener('SCE:mutate', (event) => {
+          const newCartTotal = event.detail.total_price / 100; // Assuming total_price is in cents
+          this.cartTotal = newCartTotal;
+          this.updateAmountNeeded();
+        });
+      }
+    }
+  }
+</script>
 
 {% schema %}
 {
@@ -28,9 +69,33 @@
   "settings": [
     {
       "id": "textSize",
-      "type": "text",
-      "label": "Text Size",
-      "default": "16px"
+      "type": "range",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Font Size",
+      "default": 16
+    },
+    {
+      "id": "textAlign",
+      "type": "select",
+      "label": "Text Align",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
     },
     {
       "id": "textColor",
@@ -52,7 +117,11 @@
     },
     {
       "id": "borderRadius",
-      "type": "number",
+      "type": "range",
+      "min": 0,
+      "max": 20,
+      "step": 5,
+      "unit": "px",
       "label": "Border Radius",
       "default": 10
     },
