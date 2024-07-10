@@ -1,35 +1,34 @@
+{%- if cart != empty -%}
+  {% assign currency_symbol = shop.money_format | remove: "{{amount}}" | strip %}
 
-  {%- if cart != empty -%}
-    {% assign currency_symbol = shop.money_format | remove: "{{amount}}" | strip %}
-
-    <div 
-      x-data="cartNotice" 
-      x-init="init"
-      x-show="cartTotal > 0"
-      data-free-shipping-threshold="{{ block.settings.free_shipping_threshold }}"
-      data-cart-total="{{ cart.total_price | divided_by: 100 }}"
-      data-currency-symbol="{{ currency_symbol }}"
-      style="
-        font-size: {{ block.settings.textSize }};
-        color: {{ block.settings.textColor }};
-        background-color: {{ block.settings.backgroundColor }};
-        border: 1px solid {{ block.settings.borderColor }};
-        border-radius: {{ block.settings.borderRadius }}px;
-        text-align: {{ block.settings.textAlign }};
-        padding: 10px;
-        margin-top: 10px;
-        margin-bottom: 10px;
+  <div 
+    x-data="cartNotice" 
+    x-init="init"
+    x-show="cartTotal > 0"
+    data-free-shipping-threshold="{{ block.settings.free_shipping_threshold }}"
+    data-cart-total="{{ cart.total_price | divided_by: 100 }}"
+    data-currency-symbol="{{ currency_symbol }}"
+    style="
+      font-size: {{ block.settings.textSize }}px;
+      color: {{ block.settings.textColor }};
+      background-color: {{ block.settings.backgroundColor }};
+      border: {{ block.settings.borderWidth }}px solid {{ block.settings.borderColor }};
+      border-radius: {{ block.settings.borderRadius }}px;
+      text-align: {{ block.settings.textAlign }};
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 10px;
     ">
-      <div>
-        <template x-if="amountNeeded > 0">
-          <p>You are <span x-text="currencySymbol"></span><span x-text="amountNeeded.toFixed(2)"></span> away from FREE shipping.</p>
-        </template>
-        <template x-if="amountNeeded <= 0">
-          <p>Congratulations! You qualify for FREE shipping.</p>
-        </template>
-      </div>
+    <div>
+      <template x-if="amountNeeded > 0">
+        <p>You are <span x-text="currencySymbol"></span><span x-text="amountNeeded.toFixed(2)"></span> away from FREE shipping.</p>
+      </template>
+      <template x-if="amountNeeded <= 0">
+        <p>Congratulations! You qualify for FREE shipping.</p>
+      </template>
     </div>
-  {%- endif -%}
+  </div>
+{%- endif -%}
 
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script src="{{ 'cart_events.js' | asset_url }}"></script>
@@ -62,11 +61,18 @@
   }
 </script>
 
+
 {% schema %}
 {
   "name": "Cart Notice",
   "target": "section",
   "settings": [
+    {
+      "id": "free_shipping_threshold",
+      "type": "number",
+      "label": "Free Shipping Threshold",
+      "default": 400
+    },
     {
       "id": "textSize",
       "type": "range",
@@ -116,6 +122,16 @@
       "default": "#a1a1a1"
     },
     {
+      "id": "borderWidth",
+      "type": "range",
+      "min": 0,
+      "max": 3,
+      "step": 1,
+      "unit": "px",
+      "label": "Border Width",
+      "default": 1
+    },
+    {
       "id": "borderRadius",
       "type": "range",
       "min": 0,
@@ -124,12 +140,6 @@
       "unit": "px",
       "label": "Border Radius",
       "default": 10
-    },
-    {
-      "id": "free_shipping_threshold",
-      "type": "number",
-      "label": "Free Shipping Threshold",
-      "default": 400
     }
   ]
 }
