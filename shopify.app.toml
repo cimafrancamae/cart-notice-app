@@ -1,9 +1,9 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "e83d1f588066e0f26050d71b2c2e94b8"
-name = "cart-notice-app"
-handle = "cart-notice-app"
-application_url = "https://along-teams-reunion-moses.trycloudflare.com"
+name = "elektra-cosmetics-app"
+handle = "elektra-cosmetics-app"
+application_url = "https://relatives-secrets-pad-medicine.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://along-teams-reunion-moses.trycloudflare.com/auth/callback",
-  "https://along-teams-reunion-moses.trycloudflare.com/auth/shopify/callback",
-  "https://along-teams-reunion-moses.trycloudflare.com/api/auth/callback"
+  "https://relatives-secrets-pad-medicine.trycloudflare.com/auth/callback",
+  "https://relatives-secrets-pad-medicine.trycloudflare.com/auth/shopify/callback",
+  "https://relatives-secrets-pad-medicine.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
