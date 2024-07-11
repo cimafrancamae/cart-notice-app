@@ -3,7 +3,7 @@
 client_id = "e83d1f588066e0f26050d71b2c2e94b8"
 name = "elektra-cosmetics-app"
 handle = "elektra-cosmetics-app"
-application_url = "https://tide-released-builders-exact.trycloudflare.com"
+application_url = "https://remedy-lawn-broadway-coat.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://tide-released-builders-exact.trycloudflare.com/auth/callback",
-  "https://tide-released-builders-exact.trycloudflare.com/auth/shopify/callback",
-  "https://tide-released-builders-exact.trycloudflare.com/api/auth/callback"
+  "https://remedy-lawn-broadway-coat.trycloudflare.com/auth/callback",
+  "https://remedy-lawn-broadway-coat.trycloudflare.com/auth/shopify/callback",
+  "https://remedy-lawn-broadway-coat.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
