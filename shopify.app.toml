@@ -3,7 +3,7 @@
 client_id = "e83d1f588066e0f26050d71b2c2e94b8"
 name = "elektra-cosmetics-app"
 handle = "elektra-cosmetics-app"
-application_url = "https://privacy-medicaid-jm-easter.trycloudflare.com"
+application_url = "https://one-master-sound-setup.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://privacy-medicaid-jm-easter.trycloudflare.com/auth/callback",
-  "https://privacy-medicaid-jm-easter.trycloudflare.com/auth/shopify/callback",
-  "https://privacy-medicaid-jm-easter.trycloudflare.com/api/auth/callback"
+  "https://one-master-sound-setup.trycloudflare.com/auth/callback",
+  "https://one-master-sound-setup.trycloudflare.com/auth/shopify/callback",
+  "https://one-master-sound-setup.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
