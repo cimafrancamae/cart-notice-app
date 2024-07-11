@@ -3,7 +3,7 @@
 client_id = "e83d1f588066e0f26050d71b2c2e94b8"
 name = "elektra-cosmetics-app"
 handle = "elektra-cosmetics-app"
-application_url = "https://one-master-sound-setup.trycloudflare.com"
+application_url = "https://tide-released-builders-exact.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://one-master-sound-setup.trycloudflare.com/auth/callback",
-  "https://one-master-sound-setup.trycloudflare.com/auth/shopify/callback",
-  "https://one-master-sound-setup.trycloudflare.com/api/auth/callback"
+  "https://tide-released-builders-exact.trycloudflare.com/auth/callback",
+  "https://tide-released-builders-exact.trycloudflare.com/auth/shopify/callback",
+  "https://tide-released-builders-exact.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
