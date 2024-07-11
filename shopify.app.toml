@@ -3,7 +3,7 @@
 client_id = "e83d1f588066e0f26050d71b2c2e94b8"
 name = "elektra-cosmetics-app"
 handle = "elektra-cosmetics-app"
-application_url = "https://qui-wings-vegas-forty.trycloudflare.com"
+application_url = "https://privacy-medicaid-jm-easter.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://qui-wings-vegas-forty.trycloudflare.com/auth/callback",
-  "https://qui-wings-vegas-forty.trycloudflare.com/auth/shopify/callback",
-  "https://qui-wings-vegas-forty.trycloudflare.com/api/auth/callback"
+  "https://privacy-medicaid-jm-easter.trycloudflare.com/auth/callback",
+  "https://privacy-medicaid-jm-easter.trycloudflare.com/auth/shopify/callback",
+  "https://privacy-medicaid-jm-easter.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
