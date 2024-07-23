@@ -40,19 +40,110 @@
       cartTotal: 0,
       amountNeeded: 0,
       currencySymbol: '',
+      newNoteValue: '',
+      cartNoteTextArea: '',
+      cartNoteUpdated: false,
       init() {
         this.freeShippingThreshold = parseFloat(this.$el.dataset.freeShippingThreshold);
         this.cartTotal = parseFloat(this.$el.dataset.cartTotal);
         this.currencySymbol = this.$el.dataset.currencySymbol;
+        this.cartnote = document.querySelector('.cart__note');
+        this.checkbox1 = document.getElementById('checkbox1');
+        this.specificDateField = document.getElementById('specificDate');
+        this.cartNoteTextArea = document.getElementById('CartDrawer-Note');
+        this.checkboxes = document.querySelectorAll('input[name="special_instructions[]"]');
+        this.errorMsg = document.createElement('p');
+        this.errorMsg.style.color = 'red';
         this.updateAmountNeeded();
+        this.updateCartNote();
+        this.updateCartNoteValue();
         this.setupCartListener();
+        // Initialize debouncedUpdate after setup
+        this.debouncedUpdate = debounce(() => {
+          this.updateCartNoteValue();
+        }, 300);
       },
       updateAmountNeeded() {
         this.amountNeeded = this.freeShippingThreshold - this.cartTotal;
       },
+      updateCartNote() {
+        if (this.cartNoteUpdated) return;
+
+    
+        
+        if (this.cartnote) {
+          let newDiv = document.createElement('div');
+          newDiv.className = 'special-instructions';
+          newDiv.innerHTML = `
+            <label>
+              <input type="checkbox" id="checkbox1" name="special_instructions[]" value="Need by a specific date">
+              Need by a specific date:
+              <input type="date" id="specificDate" name="specific_date" class="field__input visually-hidden">
+            </label>
+            <label>
+              <input type="checkbox" id="checkbox2" name="special_instructions[]" value="Ship to a different address">
+              Ship to a different address
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                id="checkbox3"
+                name="special_instructions[]"
+                value="Would like information about samples"
+              >
+              Would like information about samples
+            </label>
+          `;
+
+          this.cartnote.parentNode.insertBefore(newDiv, this.cartnote);
+          this.cartNoteUpdated = true;
+        }
+
+        this.checkbox1 = document.getElementById('checkbox1');
+        this.specificDateField = document.getElementById('specificDate');
+        this.cartNoteTextArea = document.getElementById('CartDrawer-Note');
+        this.checkboxes = document.querySelectorAll('input[name="special_instructions[]"]');
+
+        this.checkboxes.forEach((checkbox) => {
+          checkbox.addEventListener('change', this.debouncedUpdate);
+        });
+
+        if (this.checkbox1) {
+          this.checkbox1.addEventListener('change', () => {
+            this.specificDateField.value = null;
+            this.specificDateField.classList.toggle('visually-hidden', !this.checkbox1.checked);
+          });
+        }
+
+        if (this.specificDateField) {
+          this.specificDateField.addEventListener('change', this.debouncedUpdate);
+        }
+
+        if (this.specificDateField && this.specificDateField.parentNode) {
+          this.specificDateField.parentNode.appendChild(this.errorMsg);
+        }
+
+      },
+      updateCartNoteValue() {
+        const selectedValues = Array.from(this.checkboxes).reduce((instructions, checkbox) => {
+          if (checkbox.checked) {
+            let instruction = checkbox.value;
+            if (checkbox.id === 'checkbox1' && this.specificDateField.value.trim() !== '') {
+              instruction = `${checkbox.value}: ${this.specificDateField.value}`;
+              this.errorMsg.textContent = '';
+            } else if (checkbox.id === 'checkbox1' && this.specificDateField.value.trim() === '') {
+              this.errorMsg.textContent = 'Please provide a specific date.';
+              this.errorMsg.scrollIntoView();
+              return instructions;
+            }
+            instructions.push(instruction);
+          }
+          return instructions;
+        }, []);
+      },
       setupCartListener() {
         window.addEventListener('SCE:mutate', (event) => {
-          const newCartTotal = event.detail.total_price / 100; // Assuming total_price is in cents
+          const newCartTotal = event.detail.total_price / 100;
           this.cartTotal = newCartTotal;
           this.updateAmountNeeded();
         });
@@ -61,6 +152,15 @@
   }
 </script>
 
+<style>
+  .special-instructions {
+    display: flex;
+    flex-direction: column;
+  }
+  .special-instructions label {
+    margin-bottom: 10px;
+  }
+</style>
 
 {% schema %}
 {
