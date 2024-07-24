@@ -41,7 +41,6 @@
       amountNeeded: 0,
       currencySymbol: '',
       newNoteValue: '',
-      cartNoteTextArea: '',
       cartNoteUpdated: false,
       init() {
         this.freeShippingThreshold = parseFloat(this.$el.dataset.freeShippingThreshold);
@@ -53,16 +52,17 @@
         this.cartnote = document.querySelector('.cart__note');
         this.checkbox1 = document.getElementById('checkbox1');
         this.specificDateField = document.getElementById('specificDate');
-        this.cartNoteTextArea = document.getElementById('CartDrawer-Note');
+        this.cartNoteTextArea = document.getElementById('Cart-note');
+        this.cartDrawerNoteTextArea = document.getElementById('CartDrawer-Note');
         this.checkboxes = document.querySelectorAll('input[name="special_instructions[]"]');
         this.errorMsg = document.createElement('p');
         this.errorMsg.style.color = 'red';
         this.updateCartNote();
-        
+
         // Initialize debouncedUpdate after setup
         this.debouncedUpdate = debounce(() => {
           this.updateCartNoteValue();
-        }, 300);
+        }, ON_CHANGE_DEBOUNCE_TIMER);
 
         this.checkboxes.forEach((checkbox) => {
           checkbox.addEventListener('change', this.debouncedUpdate);
@@ -126,6 +126,10 @@
 
       },
       updateCartNoteValue() {
+        console.log('note -->', this.cartNoteTextArea.value)
+
+        this.newNoteValue = this.cartNoteTextArea.value || '';
+
         const selectedValues = Array.from(this.checkboxes).reduce((instructions, checkbox) => {
           if (checkbox.checked) {
             let instruction = checkbox.value;
@@ -142,7 +146,27 @@
           return instructions;
         }, []);
 
-        console.log('selected --->', selectedValues);
+        if (selectedValues.length > 0) {
+          this.newNoteValue += `\n\nSpecial Instructions:\n${selectedValues.join('\n')}`;
+        }
+        console.log(this.newNoteValue);
+
+        const body = JSON.stringify({ note: this.newNoteValue });
+
+        fetch('/cart/update.js', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: body,
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Cart note updated:', data);
+        })
+        .catch(error => {
+          console.error('Error updating cart note:', error);
+        });
       },
       setupCartListener() {
         window.addEventListener('SCE:mutate', (event) => {
