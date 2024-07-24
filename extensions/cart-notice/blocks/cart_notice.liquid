@@ -47,6 +47,9 @@
         this.freeShippingThreshold = parseFloat(this.$el.dataset.freeShippingThreshold);
         this.cartTotal = parseFloat(this.$el.dataset.cartTotal);
         this.currencySymbol = this.$el.dataset.currencySymbol;
+        this.updateAmountNeeded();
+        this.setupCartListener();
+        
         this.cartnote = document.querySelector('.cart__note');
         this.checkbox1 = document.getElementById('checkbox1');
         this.specificDateField = document.getElementById('specificDate');
@@ -54,10 +57,8 @@
         this.checkboxes = document.querySelectorAll('input[name="special_instructions[]"]');
         this.errorMsg = document.createElement('p');
         this.errorMsg.style.color = 'red';
-        this.updateAmountNeeded();
         this.updateCartNote();
-        this.updateCartNoteValue();
-        this.setupCartListener();
+        
         // Initialize debouncedUpdate after setup
         this.debouncedUpdate = debounce(() => {
           this.updateCartNoteValue();
@@ -66,6 +67,11 @@
         this.checkboxes.forEach((checkbox) => {
           checkbox.addEventListener('change', this.debouncedUpdate);
         });
+
+        // Append errorMsg once to the parent of specificDateField
+        if (this.specificDateField && this.specificDateField.parentNode) {
+          this.specificDateField.parentNode.appendChild(this.errorMsg);
+        };
       },
       updateAmountNeeded() {
         this.amountNeeded = this.freeShippingThreshold - this.cartTotal;
@@ -108,7 +114,7 @@
 
         if (this.checkbox1) {
           this.checkbox1.addEventListener('change', () => {
-            this.specificDateField.value = null;
+            this.specificDateField.value = '';
             this.specificDateField.classList.toggle('visually-hidden', !this.checkbox1.checked);
             this.updateCartNoteValue();
           });
@@ -116,10 +122,6 @@
 
         if (this.specificDateField) {
           this.specificDateField.addEventListener('change', this.debouncedUpdate);
-        }
-
-        if (this.specificDateField && this.specificDateField.parentNode) {
-          this.specificDateField.parentNode.appendChild(this.errorMsg);
         }
 
       },
