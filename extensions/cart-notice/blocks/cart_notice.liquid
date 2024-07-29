@@ -62,6 +62,7 @@
         // Initialize debouncedUpdate after setup
         this.debouncedUpdate = debounce(() => {
           this.updateCartNoteValue();
+          this.sendCartNoteToServer();
         }, ON_CHANGE_DEBOUNCE_TIMER);
 
         this.checkboxes.forEach((checkbox) => {
@@ -117,6 +118,7 @@
             this.specificDateField.value = '';
             this.specificDateField.classList.toggle('visually-hidden', !this.checkbox1.checked);
             this.updateCartNoteValue();
+            this.sendCartNoteToServer();
           });
         }
 
@@ -126,8 +128,6 @@
 
       },
       updateCartNoteValue() {
-        console.log('note -->', this.cartNoteTextArea.value)
-
         this.newNoteValue = this.cartNoteTextArea.value || '';
 
         const selectedValues = Array.from(this.checkboxes).reduce((instructions, checkbox) => {
@@ -138,7 +138,6 @@
               this.errorMsg.textContent = '';
             } else if (checkbox.id === 'checkbox1' && this.specificDateField.value.trim() === '') {
               this.errorMsg.textContent = 'Please provide a specific date.';
-              this.errorMsg.scrollIntoView();
               return instructions;
             }
             instructions.push(instruction);
@@ -149,24 +148,33 @@
         if (selectedValues.length > 0) {
           this.newNoteValue += `\n\nSpecial Instructions:\n${selectedValues.join('\n')}`;
         }
-        console.log(this.newNoteValue);
+      },
+      sendCartNoteToServer() {
+        const body = { 
+          note: this.newNoteValue,
+          sections: "main-cart-footer"
+        };
 
-        const body = JSON.stringify({ note: this.newNoteValue });
-
-        fetch('/cart/update.js', {
+        fetch(window.Shopify.routes.root + 'cart/update.js', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: body,
+          body: JSON.stringify(body),
         })
         .then(response => response.json())
         .then(data => {
+          let updatedHTML = this.getSectionInnerHTML(data.sections["main-cart-footer"])
+          document.getElementById("Cart-note").value = this.newNoteValue
+          console.log('updated html:', updatedHTML);
           console.log('Cart note updated:', data);
         })
         .catch(error => {
           console.error('Error updating cart note:', error);
         });
+      },
+      getSectionInnerHTML(html, selector = '.shopify-section') {
+        return new DOMParser().parseFromString(html, 'text/html').querySelector(selector).innerHTML;
       },
       setupCartListener() {
         window.addEventListener('SCE:mutate', (event) => {
