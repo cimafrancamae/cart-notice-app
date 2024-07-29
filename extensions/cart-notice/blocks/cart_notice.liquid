@@ -69,6 +69,8 @@
           checkbox.addEventListener('change', this.debouncedUpdate);
         });
 
+        this.specificDateField.addEventListener('change', this.debouncedUpdate);
+
         // Append errorMsg once to the parent of specificDateField
         if (this.specificDateField && this.specificDateField.parentNode) {
           this.specificDateField.parentNode.appendChild(this.errorMsg);
@@ -122,14 +124,8 @@
           });
         }
 
-        if (this.specificDateField) {
-          this.specificDateField.addEventListener('change', this.debouncedUpdate);
-        }
-
       },
       updateCartNoteValue() {
-        this.newNoteValue = this.cartNoteTextArea.value || '';
-
         const selectedValues = Array.from(this.checkboxes).reduce((instructions, checkbox) => {
           if (checkbox.checked) {
             let instruction = checkbox.value;
@@ -146,7 +142,9 @@
         }, []);
 
         if (selectedValues.length > 0) {
-          this.newNoteValue += `\n\nSpecial Instructions:\n${selectedValues.join('\n')}`;
+          this.newNoteValue = `${selectedValues.join('\n')}`;
+        } else {
+          this.newNoteValue = '';
         }
       },
       sendCartNoteToServer() {
@@ -166,7 +164,6 @@
         .then(data => {
           let updatedHTML = this.getSectionInnerHTML(data.sections["main-cart-footer"])
           document.getElementById("Cart-note").value = this.newNoteValue
-          console.log('updated html:', updatedHTML);
           console.log('Cart note updated:', data);
         })
         .catch(error => {
