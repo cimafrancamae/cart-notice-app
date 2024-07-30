@@ -106,27 +106,33 @@
             </label>
           `;
 
+          let newTextArea = document.createElement('textarea');
+          newTextArea.className = 'text-area text-area--resize-vertical field__input';
+          newTextArea.id = 'manual-note';
+
           this.cartnote.parentNode.insertBefore(newDiv, this.cartnote);
+          this.cartnote.appendChild(newTextArea);
           this.cartNoteUpdated = true;
         }
 
         this.checkbox1 = document.getElementById('checkbox1');
         this.specificDateField = document.getElementById('specificDate');
-        this.cartNoteTextArea = document.getElementById('CartDrawer-Note');
         this.checkboxes = document.querySelectorAll('input[name="special_instructions[]"]');
 
         if (this.checkbox1) {
           this.checkbox1.addEventListener('change', () => {
             this.specificDateField.value = '';
             this.specificDateField.classList.toggle('visually-hidden', !this.checkbox1.checked);
-            this.updateCartNoteValue();
-            this.sendCartNoteToServer();
           });
         }
 
+        this.manualNoteTextArea = document.getElementById('manual-note');
+        this.manualNoteTextArea.addEventListener('input', this.debouncedUpdate);
+
       },
       updateCartNoteValue() {
-        const selectedValues = Array.from(this.checkboxes).reduce((instructions, checkbox) => {
+        const manualNote = this.manualNoteTextArea ? this.manualNoteTextArea.value.trim() : '';
+        const specialInstructions = Array.from(this.checkboxes).reduce((instructions, checkbox) => {
           if (checkbox.checked) {
             let instruction = checkbox.value;
             if (checkbox.id === 'checkbox1' && this.specificDateField.value.trim() !== '') {
@@ -139,13 +145,11 @@
             instructions.push(instruction);
           }
           return instructions;
-        }, []);
+        }, []).join('\n');
 
-        if (selectedValues.length > 0) {
-          this.newNoteValue = `${selectedValues.join('\n')}`;
-        } else {
-          this.newNoteValue = '';
-        }
+        console.log('manual note', this.manualNoteTextArea.value)
+
+        this.newNoteValue = [manualNote, specialInstructions].filter(Boolean).join('\n');
       },
       sendCartNoteToServer() {
         const body = { 
@@ -162,8 +166,9 @@
         })
         .then(response => response.json())
         .then(data => {
-          let updatedHTML = this.getSectionInnerHTML(data.sections["main-cart-footer"])
-          document.getElementById("Cart-note").value = this.newNoteValue
+          let updatedHTML = this.getSectionInnerHTML(data.sections["main-cart-footer"]);
+          this.cartNoteTextArea.value = this.newNoteValue
+          this.cartDrawerNoteTextArea.value = this.newNoteValue
           console.log('Cart note updated:', data);
         })
         .catch(error => {
@@ -191,6 +196,12 @@
   }
   .special-instructions label {
     margin-bottom: 10px;
+  }
+  #Cart-note {
+    display: none;
+  }
+  #CartDrawer-Note {
+    display: none;
   }
 </style>
 
