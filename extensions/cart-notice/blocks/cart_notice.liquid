@@ -75,6 +75,9 @@
         if (this.specificDateField && this.specificDateField.parentNode) {
           this.specificDateField.parentNode.appendChild(this.errorMsg);
         };
+
+        this.manualNoteTextArea = document.getElementById('manual-note');
+        this.manualNoteTextArea.addEventListener('input', this.debouncedUpdate);
       },
       updateAmountNeeded() {
         this.amountNeeded = this.freeShippingThreshold - this.cartTotal;
@@ -126,8 +129,7 @@
           });
         }
 
-        this.manualNoteTextArea = document.getElementById('manual-note');
-        this.manualNoteTextArea.addEventListener('input', this.debouncedUpdate);
+        
 
       },
       updateCartNoteValue() {
@@ -167,8 +169,13 @@
         .then(response => response.json())
         .then(data => {
           let updatedHTML = this.getSectionInnerHTML(data.sections["main-cart-footer"]);
-          this.cartNoteTextArea.value = this.newNoteValue
-          this.cartDrawerNoteTextArea.value = this.newNoteValue
+
+          if (this.cartNoteTextArea) {
+            this.cartNoteTextArea.value = this.newNoteValue
+          } else if (this.cartDrawerNoteTextArea) {
+            this.cartDrawerNoteTextArea.value = this.newNoteValue
+          }
+
           console.log('Cart note updated:', data);
         })
         .catch(error => {
