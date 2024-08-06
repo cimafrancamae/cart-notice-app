@@ -40,150 +40,15 @@
       cartTotal: 0,
       amountNeeded: 0,
       currencySymbol: '',
-      newNoteValue: '',
-      cartNoteUpdated: false,
       init() {
         this.freeShippingThreshold = parseFloat(this.$el.dataset.freeShippingThreshold);
         this.cartTotal = parseFloat(this.$el.dataset.cartTotal);
         this.currencySymbol = this.$el.dataset.currencySymbol;
         this.updateAmountNeeded();
         this.setupCartListener();
-        
-        this.cartnote = document.querySelector('.cart__note');
-        this.checkbox1 = document.getElementById('checkbox1');
-        this.specificDateField = document.getElementById('specificDate');
-        this.cartNoteTextArea = document.getElementById('Cart-note');
-        this.cartDrawerNoteTextArea = document.getElementById('CartDrawer-Note');
-        this.checkboxes = document.querySelectorAll('input[name="special_instructions[]"]');
-        this.errorMsg = document.createElement('p');
-        this.errorMsg.style.color = 'red';
-        this.updateCartNote();
-
-        // Initialize debouncedUpdate after setup
-        this.debouncedUpdate = debounce(() => {
-          this.updateCartNoteValue();
-          this.sendCartNoteToServer();
-        }, ON_CHANGE_DEBOUNCE_TIMER);
-
-        this.checkboxes.forEach((checkbox) => {
-          checkbox.addEventListener('change', this.debouncedUpdate);
-        });
-
-        this.specificDateField.addEventListener('change', this.debouncedUpdate);
-
-        // Append errorMsg once to the parent of specificDateField
-        if (this.specificDateField && this.specificDateField.parentNode) {
-          this.specificDateField.parentNode.appendChild(this.errorMsg);
-        };
-
-        this.manualNoteTextArea = document.getElementById('manual-note');
-        this.manualNoteTextArea.addEventListener('input', this.debouncedUpdate);
       },
       updateAmountNeeded() {
         this.amountNeeded = this.freeShippingThreshold - this.cartTotal;
-      },
-      updateCartNote() {
-        if (this.cartNoteUpdated) return;
-
-        if (this.cartnote) {
-          let newDiv = document.createElement('div');
-          newDiv.className = 'special-instructions';
-          newDiv.innerHTML = `
-            <label>
-              <input type="checkbox" id="checkbox1" name="special_instructions[]" value="Need by a specific date">
-              Need by a specific date:
-              <input type="date" id="specificDate" name="specific_date" class="field__input visually-hidden">
-            </label>
-            <label>
-              <input type="checkbox" id="checkbox2" name="special_instructions[]" value="Ship to a different address">
-              Ship to a different address
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                id="checkbox3"
-                name="special_instructions[]"
-                value="Would like information about samples"
-              >
-              Would like information about samples
-            </label>
-          `;
-
-          let newTextArea = document.createElement('textarea');
-          newTextArea.className = 'text-area text-area--resize-vertical field__input';
-          newTextArea.id = 'manual-note';
-
-          this.cartnote.parentNode.insertBefore(newDiv, this.cartnote);
-          this.cartnote.appendChild(newTextArea);
-          this.cartNoteUpdated = true;
-        }
-
-        this.checkbox1 = document.getElementById('checkbox1');
-        this.specificDateField = document.getElementById('specificDate');
-        this.checkboxes = document.querySelectorAll('input[name="special_instructions[]"]');
-
-        if (this.checkbox1) {
-          this.checkbox1.addEventListener('change', () => {
-            this.specificDateField.value = '';
-            this.specificDateField.classList.toggle('visually-hidden', !this.checkbox1.checked);
-          });
-        }
-
-        
-
-      },
-      updateCartNoteValue() {
-        const manualNote = this.manualNoteTextArea ? this.manualNoteTextArea.value.trim() : '';
-        const specialInstructions = Array.from(this.checkboxes).reduce((instructions, checkbox) => {
-          if (checkbox.checked) {
-            let instruction = checkbox.value;
-            if (checkbox.id === 'checkbox1' && this.specificDateField.value.trim() !== '') {
-              instruction = `${checkbox.value}: ${this.specificDateField.value}`;
-              this.errorMsg.textContent = '';
-            } else if (checkbox.id === 'checkbox1' && this.specificDateField.value.trim() === '') {
-              this.errorMsg.textContent = 'Please provide a specific date.';
-              return instructions;
-            }
-            instructions.push(instruction);
-          }
-          return instructions;
-        }, []).join('\n');
-
-        console.log('manual note', this.manualNoteTextArea.value)
-
-        this.newNoteValue = [manualNote, specialInstructions].filter(Boolean).join('\n');
-      },
-      sendCartNoteToServer() {
-        const body = { 
-          note: this.newNoteValue,
-          sections: "main-cart-footer"
-        };
-
-        fetch(window.Shopify.routes.root + 'cart/update.js', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(body),
-        })
-        .then(response => response.json())
-        .then(data => {
-          let updatedHTML = this.getSectionInnerHTML(data.sections["main-cart-footer"]);
-
-          if (this.cartNoteTextArea) {
-            this.cartNoteTextArea.value = this.newNoteValue
-          } else if (this.cartDrawerNoteTextArea) {
-            this.cartDrawerNoteTextArea.value = this.newNoteValue
-          }
-
-          console.log('Cart note updated:', data);
-        })
-        .catch(error => {
-          console.error('Error updating cart note:', error);
-        });
-      },
-      getSectionInnerHTML(html, selector = '.shopify-section') {
-        return new DOMParser().parseFromString(html, 'text/html').querySelector(selector).innerHTML;
       },
       setupCartListener() {
         window.addEventListener('SCE:mutate', (event) => {
@@ -195,22 +60,6 @@
     }
   }
 </script>
-
-<style>
-  .special-instructions {
-    display: flex;
-    flex-direction: column;
-  }
-  .special-instructions label {
-    margin-bottom: 10px;
-  }
-  #Cart-note {
-    display: none;
-  }
-  #CartDrawer-Note {
-    display: none;
-  }
-</style>
 
 {% schema %}
 {
