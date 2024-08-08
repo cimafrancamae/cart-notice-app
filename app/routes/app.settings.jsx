@@ -17,9 +17,10 @@ import {
   Select,
   RangeSlider,
   PageActions,
+  Checkbox,
 } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
-import {useState, useCallback} from 'react';
+import {useState, useCallback, useEffect} from 'react';
 import { json } from "@remix-run/node";
 import { Form, useLoaderData } from "@remix-run/react";
 
@@ -120,14 +121,58 @@ export default function SettingsPage() {
     setIsBorderColorPickerOpen(!isBorderColorPickerOpen);
   };
 
+  const [enableCartNote, setCartNote] = useState(false);
+  const handleCartNoteChange = useCallback(
+    (newChecked) => {
+      console.log(newChecked)
+      setCartNote(newChecked)
+    },[],
+  );
+
   const hexTextColor = hsbToHex(textColor);
   const hexBackgroundColor = hsbToHex(backgroundColor);
   const hexBorderColor = hsbToHex(borderColor);
+
+  useEffect(() => {
+    if (enableCartNote) {
+      console.log('cart note enabled')
+      // const cartNoteInstance = cartNote();
+      // cartNoteInstance.init();
+    }
+  },[enableCartNote])
 
   return (
     <Form method="POST">
       <Page>
         <TitleBar title="Settings" />
+        <BlockStack gap={{ xs: "800", sm: "400" }}>
+          <InlineGrid columns={{ xs: "1fr", md: "2fr 5fr" }} gap="400">
+            <Box
+              as="section"
+              paddingInlineStart={{ xs: 400, sm: 0 }}
+              paddingInlineEnd={{ xs: 400, sm: 0 }}
+            >
+              <BlockStack gap="400">
+                <Text as="h3" variant="headingMd">
+                  Cart Note
+                </Text>
+                <Text as="p" variant="bodyMd">
+                  Enable or disable custom cart note.
+                </Text>
+              </BlockStack>
+            </Box>
+            <Card roundedAbove="sm">
+              <BlockStack gap="400">
+                <Checkbox
+                  label="Enable cart note"
+                  checked={enableCartNote}
+                  onChange={handleCartNoteChange}
+                />
+              </BlockStack>
+            </Card>
+          </InlineGrid>
+          {smUp ? <Divider /> : null}
+        </BlockStack>
         <BlockStack gap={{ xs: "800", sm: "400" }}>
           <InlineGrid columns={{ xs: "1fr", md: "2fr 5fr" }} gap="400">
             <Box
@@ -207,19 +252,4 @@ export default function SettingsPage() {
   );
 }
 
-function Code({ children }) {
-  return (
-    <Box
-      as="span"
-      padding="025"
-      paddingInlineStart="100"
-      paddingInlineEnd="100"
-      background="bg-surface-active"
-      borderWidth="025"
-      borderColor="border"
-      borderRadius="100"
-    >
-      <code>{children}</code>
-    </Box>
-  );
-}
+
