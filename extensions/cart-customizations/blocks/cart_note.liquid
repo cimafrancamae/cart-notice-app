@@ -1,44 +1,68 @@
 <div id="cart-note"></div>
 
+<script src="{{ 'cart-events.js' | asset_url }}"></script>
+
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     const cartNote = {
       newNoteValue: '',
       cartNoteUpdated: false,
       init() {
+        this.cacheDOMElements();
+        this.updateCartNote();
+        this.restorePreviousValues();
+        this.bindEvents();
+        this.setupCartListener();
+        this.setupClearListener();
+      },
+      cacheDOMElements() {
         this.cartnote = document.querySelector('.cart__note');
-        this.checkbox1 = document.getElementById('checkbox1');
-        this.specificDateField = document.getElementById('specificDate');
         this.cartNoteTextArea = document.getElementById('Cart-note');
         this.cartDrawerNoteTextArea = document.getElementById('CartDrawer-Note');
+        this.manualNoteTextArea = document.getElementById('manual-note');
         this.checkboxes = document.querySelectorAll('input[name="special_instructions[]"]');
+        this.checkbox1 = document.getElementById('checkbox1');
+        this.specificDateField = document.getElementById('specificDate');
         this.errorMsg = document.createElement('p');
         this.errorMsg.style.color = 'red';
-        this.updateCartNote();
-
+        this.errorMsg.id = 'date-error-msg'; // Add an ID for easier reference
+      },
+      bindEvents() {
         this.debouncedUpdate = this.debounce(() => {
           this.updateCartNoteValue();
           this.sendCartNoteToServer();
         }, 300);
 
         this.checkboxes.forEach((checkbox) => {
-          checkbox.addEventListener('change', this.debouncedUpdate.bind(this));
+          checkbox.addEventListener('change', () => {
+            if (checkbox === this.checkbox1 && !checkbox.checked) {
+              this.specificDateField.value = ''; // Clear date value when checkbox is unchecked
+              this.errorMsg.textContent = ''; // Clear error message
+            }
+            this.specificDateField.classList.toggle('visually-hidden', !this.checkbox1.checked);
+            this.debouncedUpdate();
+          });
         });
 
-        this.specificDateField.addEventListener('change', this.debouncedUpdate.bind(this));
-
-        if (this.specificDateField && this.specificDateField.parentNode) {
-          this.specificDateField.parentNode.appendChild(this.errorMsg);
+        if (this.specificDateField) {
+          this.specificDateField.addEventListener('change', () => {
+            this.errorMsg.textContent = ''; // Clear error message on date change
+            this.debouncedUpdate();
+          });
+          if (this.specificDateField.parentNode) {
+            this.specificDateField.parentNode.appendChild(this.errorMsg);
+          }
         }
 
-        this.manualNoteTextArea = document.getElementById('manual-note');
-        this.manualNoteTextArea.addEventListener('input', this.debouncedUpdate.bind(this));
+        if (this.manualNoteTextArea) {
+          this.manualNoteTextArea.addEventListener('input', this.debouncedUpdate.bind(this));
+        }
       },
       updateCartNote() {
         if (this.cartNoteUpdated) return;
 
-        if (this.cartnote) {
-          let newDiv = document.createElement('div');
+        if (this.cartnote && !this.manualNoteTextArea) { // Avoid duplicating elements
+          const newDiv = document.createElement('div');
           newDiv.className = 'special-instructions';
           newDiv.innerHTML = `
             <label>
@@ -61,24 +85,17 @@
             </label>
           `;
 
-          let newTextArea = document.createElement('textarea');
+          const newTextArea = document.createElement('textarea');
           newTextArea.className = 'text-area text-area--resize-vertical field__input';
           newTextArea.id = 'manual-note';
 
           this.cartnote.parentNode.insertBefore(newDiv, this.cartnote);
           this.cartnote.appendChild(newTextArea);
           this.cartNoteUpdated = true;
-        }
 
-        this.checkbox1 = document.getElementById('checkbox1');
-        this.specificDateField = document.getElementById('specificDate');
-        this.checkboxes = document.querySelectorAll('input[name="special_instructions[]"]');
-
-        if (this.checkbox1) {
-          this.checkbox1.addEventListener('change', () => {
-            this.specificDateField.value = '';
-            this.specificDateField.classList.toggle('visually-hidden', !this.checkbox1.checked);
-          });
+          this.cacheDOMElements();  // Cache the newly added elements
+          this.restorePreviousValues(); // Restore previous checkbox and date values
+          this.bindEvents();  // Re-bind events to new elements
         }
       },
       updateCartNoteValue() {
@@ -88,7 +105,7 @@
             let instruction = checkbox.value;
             if (checkbox.id === 'checkbox1' && this.specificDateField.value.trim() !== '') {
               instruction = `${checkbox.value}: ${this.specificDateField.value}`;
-              this.errorMsg.textContent = '';
+              this.errorMsg.textContent = ''; // Clear error message if date is provided
             } else if (checkbox.id === 'checkbox1' && this.specificDateField.value.trim() === '') {
               this.errorMsg.textContent = 'Please provide a specific date.';
               return instructions;
@@ -98,9 +115,44 @@
           return instructions;
         }, []).join('\n');
 
-        console.log('manual note', this.manualNoteTextArea.value)
-
+        // Combine manual note and special instructions
         this.newNoteValue = [manualNote, specialInstructions].filter(Boolean).join('\n');
+        this.saveCurrentValues(); // Save checkbox and date values
+      },
+      saveCurrentValues() {
+        const savedValues = {
+          manualNote: this.manualNoteTextArea ? this.manualNoteTextArea.value : '',
+          checkboxes: Array.from(this.checkboxes).map(checkbox => ({
+            id: checkbox.id,
+            checked: checkbox.checked
+          })),
+          specificDate: this.specificDateField ? this.specificDateField.value : ''
+        };
+
+        localStorage.setItem('cartNoteValues', JSON.stringify(savedValues));
+      },
+      restorePreviousValues() {
+        const savedValues = JSON.parse(localStorage.getItem('cartNoteValues'));
+
+        if (savedValues) {
+          if (this.manualNoteTextArea) {
+            this.manualNoteTextArea.value = savedValues.manualNote || '';
+          }
+
+          if (this.checkboxes) {
+            savedValues.checkboxes.forEach(savedCheckbox => {
+              const checkbox = document.getElementById(savedCheckbox.id);
+              if (checkbox) {
+                checkbox.checked = savedCheckbox.checked;
+              }
+            });
+          }
+
+          if (this.specificDateField) {
+            this.specificDateField.value = savedValues.specificDate || '';
+            this.specificDateField.classList.toggle('visually-hidden', !this.checkbox1.checked);
+          }
+        }
       },
       sendCartNoteToServer() {
         const body = { 
@@ -120,9 +172,9 @@
           let updatedHTML = this.getSectionInnerHTML(data.sections["main-cart-footer"]);
 
           if (this.cartNoteTextArea) {
-            this.cartNoteTextArea.value = this.newNoteValue
+            this.cartNoteTextArea.value = this.newNoteValue;
           } else if (this.cartDrawerNoteTextArea) {
-            this.cartDrawerNoteTextArea.value = this.newNoteValue
+            this.cartDrawerNoteTextArea.value = this.newNoteValue;
           }
 
           console.log('Cart note updated:', data);
@@ -134,11 +186,69 @@
       getSectionInnerHTML(html, selector = '.shopify-section') {
         return new DOMParser().parseFromString(html, 'text/html').querySelector(selector).innerHTML;
       },
+      setupCartListener() {
+        window.addEventListener('SCE:mutate', (event) => {
+          console.log('update', event);
+          this.cartNoteUpdated = false;
+          this.cacheDOMElements();
+          this.updateCartNote();
+          this.restorePreviousValues();
+        });
+      },
+      setupClearListener() {
+        window.addEventListener('SCE:clear', (event) => {
+          console.log('clear', event);
+          this.clearAllValues();
+        });
+      },
+      clearAllValues() {
+        // Clear local storage
+        localStorage.removeItem('cartNoteValues');
+
+        // Uncheck all checkboxes
+        this.checkboxes.forEach(checkbox => {
+          checkbox.checked = false;
+        });
+
+        // Clear date field
+        if (this.specificDateField) {
+          this.specificDateField.value = '';
+          this.specificDateField.classList.add('visually-hidden');
+        }
+
+        // Clear manual note
+        if (this.manualNoteTextArea) {
+          this.manualNoteTextArea.value = '';
+        }
+
+        // Clear cart note text area
+        if (this.cartNoteTextArea) {
+          this.cartNoteTextArea.value = '';
+        }
+        if (this.cartDrawerNoteTextArea) {
+          this.cartDrawerNoteTextArea.value = '';
+        }
+
+        // Clear newNoteValue
+        this.newNoteValue = '';
+      },
+      debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+          const later = () => {
+            clearTimeout(timeout);
+            func.apply(this, args);
+          };
+          clearTimeout(timeout);
+          timeout = setTimeout(later, wait);
+        };
+      }
     };
 
     cartNote.init();
   });
 </script>
+
 
 <style>
   .special-instructions {
@@ -148,10 +258,10 @@
   .special-instructions label {
     margin-bottom: 10px;
   }
-  #Cart-note {
+  #Cart-note, #CartDrawer-Note {
     display: none;
   }
-  #CartDrawer-Note {
+  .visually-hidden {
     display: none;
   }
 </style>
