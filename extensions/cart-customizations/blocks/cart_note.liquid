@@ -3,251 +3,245 @@
 <script src="{{ 'cart-events.js' | asset_url }}"></script>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
     const cartNote = {
-      newNoteValue: '',
-      cartNoteUpdated: false,
-      init() {
-        this.cacheDOMElements();
-        this.updateCartNote();
-        this.restorePreviousValues();
-        this.bindEvents();
-        this.setupCartListener();
-        this.setupClearListener();
-      },
-      cacheDOMElements() {
-        this.cartnote = document.querySelector('.cart__note');
-        this.cartNoteTextArea = document.getElementById('Cart-note');
-        this.cartDrawerNoteTextArea = document.getElementById('CartDrawer-Note');
-        this.manualNoteTextArea = document.getElementById('manual-note');
-        this.checkboxes = document.querySelectorAll('input[name="special_instructions[]"]');
-        this.checkbox1 = document.getElementById('checkbox1');
-        this.specificDateField = document.getElementById('specificDate');
-        this.errorMsg = document.createElement('p');
-        this.errorMsg.style.color = 'red';
-        this.errorMsg.id = 'date-error-msg'; // Add an ID for easier reference
-      },
-      bindEvents() {
-        this.debouncedUpdate = this.debounce(() => {
-          this.updateCartNoteValue();
-          this.sendCartNoteToServer();
-        }, 300);
+        newNoteValue: '',
+        cartNoteUpdated: false,
+        savedState: {},
 
-        this.checkboxes.forEach((checkbox) => {
-          checkbox.addEventListener('change', () => {
-            if (checkbox === this.checkbox1 && !checkbox.checked) {
-              this.specificDateField.value = ''; // Clear date value when checkbox is unchecked
-              this.errorMsg.textContent = ''; // Clear error message
-            }
-            this.specificDateField.classList.toggle('visually-hidden', !this.checkbox1.checked);
-            this.debouncedUpdate();
-          });
-        });
+        init() {
+            this.cacheDOMElements();
+            this.bindEvents();
+            this.setupCartListener();
+            this.updateCartNote();
+        },
 
-        if (this.specificDateField) {
-          this.specificDateField.addEventListener('change', () => {
-            this.errorMsg.textContent = ''; // Clear error message on date change
-            this.debouncedUpdate();
-          });
-          if (this.specificDateField.parentNode) {
-            this.specificDateField.parentNode.appendChild(this.errorMsg);
-          }
-        }
+        cacheDOMElements() {
+            this.cartnote = document.querySelector('.cart__note');
+            this.cartNoteTextArea = document.getElementById('Cart-note');
+            this.cartDrawerNoteTextArea = document.getElementById('CartDrawer-Note');
+            this.manualNoteTextArea = document.getElementById('manual-note');
+            this.checkboxes = document.querySelectorAll('input[name="special_instructions[]"]');
+            this.checkbox1 = document.getElementById('checkbox1');
+            this.specificDateField = document.getElementById('specificDate');
+            this.errorMsg = document.createElement('p');
+            this.errorMsg.style.color = 'red';
+        },
 
-        if (this.manualNoteTextArea) {
-          this.manualNoteTextArea.addEventListener('input', this.debouncedUpdate.bind(this));
-        }
-      },
-      updateCartNote() {
-        if (this.cartNoteUpdated) return;
+        bindEvents() {
+            this.debouncedUpdate = this.debounce(() => {
+                this.updateCartNoteValue();
+                this.sendCartNoteToServer();
+            }, 300);
 
-        if (this.cartnote && !this.manualNoteTextArea) { // Avoid duplicating elements
-          const newDiv = document.createElement('div');
-          newDiv.className = 'special-instructions';
-          newDiv.innerHTML = `
-            <label>
-              <input type="checkbox" id="checkbox1" name="special_instructions[]" value="Need by a specific date">
-              Need by a specific date:
-              <input type="date" id="specificDate" name="specific_date" class="field__input visually-hidden">
-            </label>
-            <label>
-              <input type="checkbox" id="checkbox2" name="special_instructions[]" value="Ship to a different address">
-              Ship to a different address
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                id="checkbox3"
-                name="special_instructions[]"
-                value="Would like information about samples"
-              >
-              Would like information about samples
-            </label>
-          `;
-
-          const newTextArea = document.createElement('textarea');
-          newTextArea.className = 'text-area text-area--resize-vertical field__input';
-          newTextArea.id = 'manual-note';
-
-          this.cartnote.parentNode.insertBefore(newDiv, this.cartnote);
-          this.cartnote.appendChild(newTextArea);
-          this.cartNoteUpdated = true;
-
-          this.cacheDOMElements();  // Cache the newly added elements
-          this.restorePreviousValues(); // Restore previous checkbox and date values
-          this.bindEvents();  // Re-bind events to new elements
-        }
-      },
-      updateCartNoteValue() {
-        const manualNote = this.manualNoteTextArea ? this.manualNoteTextArea.value.trim() : '';
-        const specialInstructions = Array.from(this.checkboxes).reduce((instructions, checkbox) => {
-          if (checkbox.checked) {
-            let instruction = checkbox.value;
-            if (checkbox.id === 'checkbox1' && this.specificDateField.value.trim() !== '') {
-              instruction = `${checkbox.value}: ${this.specificDateField.value}`;
-              this.errorMsg.textContent = ''; // Clear error message if date is provided
-            } else if (checkbox.id === 'checkbox1' && this.specificDateField.value.trim() === '') {
-              this.errorMsg.textContent = 'Please provide a specific date.';
-              return instructions;
-            }
-            instructions.push(instruction);
-          }
-          return instructions;
-        }, []).join('\n');
-
-        // Combine manual note and special instructions
-        this.newNoteValue = [manualNote, specialInstructions].filter(Boolean).join('\n');
-        this.saveCurrentValues(); // Save checkbox and date values
-      },
-      saveCurrentValues() {
-        const savedValues = {
-          manualNote: this.manualNoteTextArea ? this.manualNoteTextArea.value : '',
-          checkboxes: Array.from(this.checkboxes).map(checkbox => ({
-            id: checkbox.id,
-            checked: checkbox.checked
-          })),
-          specificDate: this.specificDateField ? this.specificDateField.value : ''
-        };
-
-        localStorage.setItem('cartNoteValues', JSON.stringify(savedValues));
-      },
-      restorePreviousValues() {
-        const savedValues = JSON.parse(localStorage.getItem('cartNoteValues'));
-
-        if (savedValues) {
-          if (this.manualNoteTextArea) {
-            this.manualNoteTextArea.value = savedValues.manualNote || '';
-          }
-
-          if (this.checkboxes) {
-            savedValues.checkboxes.forEach(savedCheckbox => {
-              const checkbox = document.getElementById(savedCheckbox.id);
-              if (checkbox) {
-                checkbox.checked = savedCheckbox.checked;
-              }
+            this.checkboxes.forEach((checkbox) => {
+                checkbox.addEventListener('change', this.debouncedUpdate.bind(this));
             });
-          }
 
-          if (this.specificDateField) {
-            this.specificDateField.value = savedValues.specificDate || '';
-            this.specificDateField.classList.toggle('visually-hidden', !this.checkbox1.checked);
-          }
+            if (this.specificDateField) {
+                this.specificDateField.addEventListener('change', this.debouncedUpdate.bind(this));
+                if (this.specificDateField.parentNode) {
+                    this.specificDateField.parentNode.appendChild(this.errorMsg);
+                }
+            }
+
+            if (this.manualNoteTextArea) {
+                this.manualNoteTextArea.addEventListener('input', this.debouncedUpdate.bind(this));
+            }
+
+            if (this.checkbox1) {
+                this.checkbox1.addEventListener('change', () => {
+                    this.specificDateField.value = '';
+                    this.specificDateField.classList.toggle('visually-hidden', !this.checkbox1.checked);
+                });
+            }
+        },
+
+        updateCartNote() {
+            if (this.cartnote && !document.querySelector('.special-instructions')) {
+                const newDiv = document.createElement('div');
+                newDiv.className = 'special-instructions';
+                newDiv.innerHTML = `
+                    <label>
+                        <input type="checkbox" id="checkbox1" name="special_instructions[]" value="Need by a specific date">
+                        Need by a specific date:
+                        <input type="date" id="specificDate" name="specific_date" class="field__input visually-hidden">
+                    </label>
+                    <label>
+                        <input type="checkbox" id="checkbox2" name="special_instructions[]" value="Ship to a different address">
+                        Ship to a different address
+                    </label>
+                    <label>
+                        <input
+                            type="checkbox"
+                            id="checkbox3"
+                            name="special_instructions[]"
+                            value="Would like information about samples"
+                        >
+                        Would like information about samples
+                    </label>
+                `;
+
+                const newTextArea = document.createElement('textarea');
+                newTextArea.className = 'text-area text-area--resize-vertical field__input';
+                newTextArea.id = 'manual-note';
+
+                this.cartnote.parentNode.insertBefore(newDiv, this.cartnote);
+                this.cartnote.appendChild(newTextArea);
+
+                // Re-cache DOM elements and re-bind events
+                this.cacheDOMElements();
+                this.bindEvents();
+
+                // Restore saved state
+                this.restoreSavedState();
+            }
+        },
+
+        updateCartNoteValue() {
+            const manualNote = this.manualNoteTextArea ? this.manualNoteTextArea.value.trim() : '';
+            const specialInstructions = Array.from(this.checkboxes).reduce((instructions, checkbox) => {
+                if (checkbox.checked) {
+                    let instruction = checkbox.value;
+                    if (checkbox.id === 'checkbox1' && this.specificDateField.value.trim() !== '') {
+                        instruction = `${checkbox.value}: ${this.specificDateField.value}`;
+                        this.errorMsg.textContent = '';
+                    } else if (checkbox.id === 'checkbox1' && this.specificDateField.value.trim() === '') {
+                        this.errorMsg.textContent = 'Please provide a specific date.';
+                        return instructions;
+                    }
+                    instructions.push(instruction);
+                }
+                return instructions;
+            }, []).join('\n');
+
+            // Combine all note fields and ensure no undefined values are included
+            const noteValue = [manualNote, specialInstructions].filter(value => value && value !== "undefined").join('\n');
+
+            // Make sure `newNoteValue` is never undefined
+            this.newNoteValue = noteValue || '';
+
+            // Save current state
+            this.saveCurrentState();
+        },
+
+        saveCurrentState() {
+            this.savedState = {
+                checkbox1: this.checkbox1 ? this.checkbox1.checked : false,
+                specificDate: this.specificDateField ? this.specificDateField.value : '',
+                checkbox2: document.getElementById('checkbox2') ? document.getElementById('checkbox2').checked : false,
+                checkbox3: document.getElementById('checkbox3') ? document.getElementById('checkbox3').checked : false,
+                manualNote: this.manualNoteTextArea ? this.manualNoteTextArea.value : ''
+            };
+        },
+
+        restoreSavedState() {
+            if (this.savedState) {
+                if (this.checkbox1) this.checkbox1.checked = this.savedState.checkbox1;
+                if (this.specificDateField) this.specificDateField.value = this.savedState.specificDate;
+                if (document.getElementById('checkbox2')) document.getElementById('checkbox2').checked = this.savedState.checkbox2;
+                if (document.getElementById('checkbox3')) document.getElementById('checkbox3').checked = this.savedState.checkbox3;
+                if (this.manualNoteTextArea) this.manualNoteTextArea.value = this.savedState.manualNote;
+
+                // Handle the visibility of the specific date field
+                if (this.checkbox1 && this.checkbox1.checked) {
+                    this.specificDateField.classList.remove('visually-hidden');
+                }
+            }
+        },
+
+        sendCartNoteToServer() {
+            const body = { 
+                note: this.newNoteValue || '', // Ensure it's an empty string if undefined
+                sections: "main-cart-footer"
+            };
+
+            fetch(window.Shopify.routes.root + 'cart/update.js', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(body),
+            })
+            .then(response => response.json())
+            .then(data => {
+                let updatedHTML = this.getSectionInnerHTML(data.sections["main-cart-footer"]);
+
+                // Update the cart note text area, but ensure it only updates if there's a valid value
+                if (this.cartNoteTextArea) {
+                    this.cartNoteTextArea.value = this.newNoteValue || ''; // Ensure it's an empty string if undefined
+                } else if (this.cartDrawerNoteTextArea) {
+                    this.cartDrawerNoteTextArea.value = this.newNoteValue || ''; // Ensure it's an empty string if undefined
+                }
+
+                console.log('Cart note updated:', data);
+            })
+            .catch(error => {
+                console.error('Error updating cart note:', error);
+            });
+        },
+
+        getSectionInnerHTML(html, selector = '.shopify-section') {
+            return new DOMParser().parseFromString(html, 'text/html').querySelector(selector).innerHTML;
+        },
+
+        setupCartListener() {
+            window.addEventListener('SCE:mutate', (event) => {
+                console.log('Cart mutated:', event);
+                this.updateCartNote();
+            });
+
+            window.addEventListener('SCE:clear', () => {
+                console.log('Cart cleared');
+                this.clearCartNoteAndCheckboxes();
+            });
+
+            window.addEventListener('SCE:update', () => {
+                console.log('Cart updated');
+                this.updateCartNote();
+            });
+        },
+
+        clearCartNoteAndCheckboxes() {
+            if (this.checkboxes) {
+                this.checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+            }
+
+            if (this.specificDateField) {
+                this.specificDateField.value = '';
+            }
+
+            if (this.manualNoteTextArea) {
+                this.manualNoteTextArea.value = '';
+            }
+            
+            if (this.cartNoteTextArea) {
+                this.cartNoteTextArea.value = '';
+            }
+
+            if (this.cartDrawerNoteTextArea) {
+                this.cartDrawerNoteTextArea.value = '';
+            }
+
+            this.errorMsg.textContent = '';
+        },
+
+        debounce(func, wait) {
+            let timeout;
+            return function (...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
         }
-      },
-      sendCartNoteToServer() {
-        const body = { 
-          note: this.newNoteValue,
-          sections: "main-cart-footer"
-        };
-
-        fetch(window.Shopify.routes.root + 'cart/update.js', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(body),
-        })
-        .then(response => response.json())
-        .then(data => {
-          let updatedHTML = this.getSectionInnerHTML(data.sections["main-cart-footer"]);
-
-          if (this.cartNoteTextArea) {
-            this.cartNoteTextArea.value = this.newNoteValue;
-          } else if (this.cartDrawerNoteTextArea) {
-            this.cartDrawerNoteTextArea.value = this.newNoteValue;
-          }
-
-          console.log('Cart note updated:', data);
-        })
-        .catch(error => {
-          console.error('Error updating cart note:', error);
-        });
-      },
-      getSectionInnerHTML(html, selector = '.shopify-section') {
-        return new DOMParser().parseFromString(html, 'text/html').querySelector(selector).innerHTML;
-      },
-      setupCartListener() {
-        window.addEventListener('SCE:mutate', (event) => {
-          console.log('update', event);
-          this.cartNoteUpdated = false;
-          this.cacheDOMElements();
-          this.updateCartNote();
-          this.restorePreviousValues();
-        });
-      },
-      setupClearListener() {
-        window.addEventListener('SCE:clear', (event) => {
-          console.log('clear', event);
-          this.clearAllValues();
-        });
-      },
-      clearAllValues() {
-        // Clear local storage
-        localStorage.removeItem('cartNoteValues');
-
-        // Uncheck all checkboxes
-        this.checkboxes.forEach(checkbox => {
-          checkbox.checked = false;
-        });
-
-        // Clear date field
-        if (this.specificDateField) {
-          this.specificDateField.value = '';
-          this.specificDateField.classList.add('visually-hidden');
-        }
-
-        // Clear manual note
-        if (this.manualNoteTextArea) {
-          this.manualNoteTextArea.value = '';
-        }
-
-        // Clear cart note text area
-        if (this.cartNoteTextArea) {
-          this.cartNoteTextArea.value = '';
-        }
-        if (this.cartDrawerNoteTextArea) {
-          this.cartDrawerNoteTextArea.value = '';
-        }
-
-        // Clear newNoteValue
-        this.newNoteValue = '';
-      },
-      debounce(func, wait) {
-        let timeout;
-        return function(...args) {
-          const later = () => {
-            clearTimeout(timeout);
-            func.apply(this, args);
-          };
-          clearTimeout(timeout);
-          timeout = setTimeout(later, wait);
-        };
-      }
     };
 
     cartNote.init();
-  });
+});
+
 </script>
+
 
 
 <style>
