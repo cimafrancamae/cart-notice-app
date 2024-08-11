@@ -1,0 +1,145 @@
+<div id="cartDrawerNotice"></div>
+
+<script src="{{ 'cart-events.js' | asset_url }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const cartDrawerNotice = {
+      init() {
+        this.container = document.getElementById('cartDrawerNotice');
+        this.wrapper = document.querySelector('.drawer__cart-items-wrapper');
+        this.freeShippingThreshold = parseFloat(this.container.dataset.freeShippingThreshold);
+        this.cartTotal = parseFloat(this.container.dataset.cartTotal);
+        this.currencySymbol = this.container.dataset.currencySymbol;
+        this.amountNeeded = this.freeShippingThreshold - this.cartTotal;
+        
+        this.displayCartNotice();
+        this.updateMessage();
+        this.setupCartListener();
+      },
+      displayCartNotice() {
+        if (!this.wrapper || !this.container) {
+            console.error('Wrapper or container element is missing.');
+            return;
+        }
+
+        // Insert the container into the wrapper
+        try {
+            this.wrapper.insertBefore(this.container, this.wrapper.firstChild);
+            console.log('Cart notice displayed successfully.');
+        } catch (error) {
+            console.error('Error inserting cart notice:', error);
+        }
+      },
+      updateMessage() {
+        // Clear existing content
+        this.container.innerHTML = ''; 
+        const message = document.createElement('p');
+
+        if (this.amountNeeded > 0) {
+          message.innerHTML = `You are ${this.currencySymbol}${this.amountNeeded.toFixed(2)} away from FREE shipping.`;
+        } else {
+          message.innerHTML = `Congratulations! You qualify for FREE shipping.`;
+        }
+
+        this.container.appendChild(message);
+      },
+      updateAmountNeeded() {
+        this.amountNeeded = this.freeShippingThreshold - this.cartTotal;
+      },
+      setupCartListener() {
+        window.addEventListener('SCE:mutate', (event) => {
+          const newCartTotal = event.detail.total_price / 100;
+          this.cartTotal = newCartTotal;
+          this.updateAmountNeeded();
+          this.updateMessage();
+        });
+      }
+    };
+
+    // Initialize the cartDrawerNotice object
+    cartDrawerNotice.init();
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Cart Notice",
+  "target": "head",
+  "settings": [
+    {
+      "id": "free_shipping_threshold",
+      "type": "number",
+      "label": "Free Shipping Threshold",
+      "default": 400
+    },
+    {
+      "id": "textSize",
+      "type": "range",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Font Size",
+      "default": 16
+    },
+    {
+      "id": "textAlign",
+      "type": "select",
+      "label": "Text Align",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "id": "textColor",
+      "type": "color",
+      "label": "Text Color",
+      "default": "#000000"
+    },
+    {
+      "id": "backgroundColor",
+      "type": "color",
+      "label": "Background Color",
+      "default": "#fafafa"
+    },
+    {
+      "id": "borderColor",
+      "type": "color",
+      "label": "Border Color",
+      "default": "#a1a1a1"
+    },
+    {
+      "id": "borderWidth",
+      "type": "range",
+      "min": 0,
+      "max": 3,
+      "step": 1,
+      "unit": "px",
+      "label": "Border Width",
+      "default": 1
+    },
+    {
+      "id": "borderRadius",
+      "type": "range",
+      "min": 0,
+      "max": 20,
+      "step": 5,
+      "unit": "px",
+      "label": "Border Radius",
+      "default": 10
+    }
+  ]
+}
+{% endschema %}
