@@ -1,7 +1,10 @@
 query RunInput {
-  discountNode {
-    metafield(namespace: "$app:local-pickup-discount-function", key: "function-configuration") {
-      value
+  cart {
+    deliveryGroups {
+      deliveryOptions {
+        title
+        handle
+      }
     }
   }
 }
